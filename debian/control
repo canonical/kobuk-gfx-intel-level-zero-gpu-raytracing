@@ -1,7 +1,8 @@
 Source: intel-level-zero-gpu-raytracing
 Section: libs
 Priority: optional
-Maintainer: Intel Graphics Team <linux-graphics@intel.com>
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+XSBC-Original-Maintainer: Intel Graphics Team <linux-graphics@intel.com>
 Build-Depends: debhelper (>= 11),
  cmake,
  ninja-build,
@@ -9,7 +10,8 @@ Build-Depends: debhelper (>= 11),
  make,
  gcc,
  git,
- libpthread-stubs0-dev
+ libpthread-stubs0-dev,
+ intel-onetbb
 Standards-Version: 4.3.0
 Homepage: https://github.com/intel/level-zero-raytracing-support
 
