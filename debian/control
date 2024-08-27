@@ -9,7 +9,8 @@ Build-Depends: debhelper (>= 11),
  make,
  gcc,
  git,
- libpthread-stubs0-dev
+ libpthread-stubs0-dev,
+ intel-onetbb
 Standards-Version: 4.3.0
 Homepage: https://github.com/intel/level-zero-raytracing-support
 

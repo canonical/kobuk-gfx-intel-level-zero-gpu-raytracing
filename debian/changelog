@@ -1,3 +1,17 @@
+intel-level-zero-gpu-raytracing (1.0.0-0ubuntu1-ppa2) oracular; urgency=medium
+
+  * Un-deleted some source files that shouldn't have been deleted 
+
+ -- Shane McKee <shane.mckee@canonical.com> Tue, 27 Aug 2024 23:09:24 +0800
+
+intel-level-zero-gpu-raytracing (1.0.0-0ubuntu1-ppa1) oracular; urgency=medium
+
+  * Changed to oracular
+  * Changed to build without TBB static build (created a separate package for
+    that)
+
+ -- Shane McKee <shane.mckee@canonical.com>  Tue, 27 Aug 2024 19:54:23 +0800
+
 intel-level-zero-gpu-raytracing (1.0.0) experimental; urgency=medium
 
     * First Release
