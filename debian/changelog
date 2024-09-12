@@ -1,3 +1,9 @@
+intel-level-zero-gpu-raytracing (1.0.0-0ubuntu1~24.10~ppa2) oracular; urgency=medium
+
+  * Corrected the name of a dependency on libze1
+
+ -- Shane McKee <shane.mckee@canonical.com>  Thu, 12 Sep 2024 21:26:10 +0800
+
 intel-level-zero-gpu-raytracing (1.0.0-0ubuntu1~24.10~ppa1) oracular; urgency=medium
 
   * Update the version scheme for multiple different versions in the PPA
