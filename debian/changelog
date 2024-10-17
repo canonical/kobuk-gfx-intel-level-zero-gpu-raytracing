@@ -1,3 +1,9 @@
+intel-level-zero-gpu-raytracing (1.0.0-0ubuntu1~24.04~ppa3) noble; urgency=medium
+
+  * Update to Noble
+
+ -- Shane McKee <shane.mckee@canonical.com>  Fri, 18 Oct 2024 00:42:30 +0800
+
 intel-level-zero-gpu-raytracing (1.0.0-0ubuntu1~24.10~ppa3) oracular; urgency=medium
 
   * Change dependency to pull libtbb-dev from archive
