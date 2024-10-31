@@ -1,0 +1,67 @@
+name: PPA Upload
+
+on:
+  push:
+    branches:
+    - oracular
+
+jobs:
+  PPAUpload:
+    strategy:
+      fail-fast: true
+      matrix:
+        release:
+        - "24.04"
+        - "24.10"
+
+    runs-on: ubuntu-latest
+
+    env:
+      DEBFULLNAME: "PE Bot"
+      DEBEMAIL: "pe-bot@lists.canonical.com"
+
+    steps:
+    - name: Import GPG key
+      uses: crazy-max/ghaction-import-gpg@v6
+      with:
+        gpg_private_key: ${{ secrets.GPG_KEY_EXPORTED }}
+
+    - name: Check out code
+      uses: actions/checkout@v4
+      with:
+        # Need full history for version determination
+        fetch-depth: 0
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get install --no-install-recommends --yes \
+          debhelper \
+          devscripts \
+          dput \
+          dh-python \
+          python3-launchpadlib \
+          ninja-build \
+          pkg-config \
+          libpthread-stubs0-dev \
+          libtbb-dev \
+          libze1
+
+    - name: Set up Launchpad credentials
+      uses: DamianReeves/write-file-action@v1.3
+      with:
+        path: ${{ github.workspace }}/../lp_credentials
+        contents: ${{ secrets.LP_CREDS }}
+
+    - name: Upload to PPA
+      env:
+        RELEASE: ${{ matrix.release }}
+      run: |
+        wget https://raw.githubusercontent.com/mckees/ppa-upload-tools/refs/heads/main/ppa-upload.sh
+        chmod +x ppa-upload.sh
+        ppa-upload.sh ${{ github.workspace }}/../lp_credentials
+
+    - if: ${{ failure() && runner.debug }}
+      name: Setup upterm session
+      uses: mxschmitt/action-tmate@v3
+      with:
+        limit-access-to-actor: true
