@@ -15,7 +15,7 @@ jobs:
         - "24.04"
         - "24.10"
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     env:
       DEBFULLNAME: "PE Bot"
