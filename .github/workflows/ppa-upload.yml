@@ -3,7 +3,7 @@ name: PPA Upload
 on:
   push:
     branches:
-    - oracular
+    - main
   workflow_dispatch:
 
 jobs:
@@ -35,6 +35,8 @@ jobs:
 
     - name: Install dependencies
       run: |
+        wget https://raw.githubusercontent.com/canonical/intel-graphics-preview/refs/heads/main/setup-intel-graphics.sh
+        ./setup-intel-graphics.sh
         sudo apt-get install --no-install-recommends --yes \
           debhelper \
           devscripts \
