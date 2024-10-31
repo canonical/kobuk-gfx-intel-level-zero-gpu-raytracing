@@ -4,6 +4,7 @@ on:
   push:
     branches:
     - oracular
+  workflow_dispatch:
 
 jobs:
   PPAUpload:
