@@ -35,9 +35,10 @@ jobs:
 
     - name: Install dependencies
       run: |
-        wget https://raw.githubusercontent.com/canonical/intel-graphics-preview/refs/heads/main/setup-intel-graphics.sh
-        chmod +x ./setup-intel-graphics.sh
-        ./setup-intel-graphics.sh
+        sudo add-apt-repository ppa:kobuk-team/intel-graphics-testing
+        sudo apt update
+        sudo apt upgrade
+
         sudo apt-get install --no-install-recommends --yes \
           debhelper \
           devscripts \
@@ -62,7 +63,7 @@ jobs:
       run: |
         wget https://raw.githubusercontent.com/mckees/ppa-upload-tools/refs/heads/main/ppa-upload.sh
         chmod +x ppa-upload.sh
-        ppa-upload.sh ${{ github.workspace }}/../lp_credentials
+        ./ppa-upload.sh ${{ github.workspace }}/../lp_credentials
 
     - if: ${{ failure() && runner.debug }}
       name: Setup upterm session
