@@ -13,7 +13,6 @@ jobs:
       matrix:
         release:
         - "24.04"
-        - "24.10"
 
     runs-on: ubuntu-24.04
 
