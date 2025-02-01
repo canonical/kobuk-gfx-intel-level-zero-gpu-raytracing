@@ -16,7 +16,8 @@ Build-Depends: debhelper (>= 11),
 Standards-Version: 4.3.0
 Homepage: https://github.com/intel/level-zero-raytracing-support
 
-Package: intel-level-zero-gpu-raytracing
+Package: libze-intel-gpu-raytracing
+Replaces: intel-level-zero-gpu-raytracing (>= 1.0.0-0ubuntu1~24.10~ppa4)
 Architecture: amd64
 Depends:
  ${misc:Depends},
