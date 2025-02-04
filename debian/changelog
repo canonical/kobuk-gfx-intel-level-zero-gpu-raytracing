@@ -1,4 +1,11 @@
-intel-level-zero-gpu-raytracing (1.0.0-0ubuntu1~24.04~ppa4) noble; urgency=medium
+intel-level-zero-gpu-raytracing (1.0.0-0ubuntu1~24.10~ppa5) oracular; urgency=medium
+
+  * Change package name to fit soname
+  * Create noble version
+
+ -- Shane McKee <shane.mckee@canonical.com>  Wed, 29 Jan 2025 11:15:53 +0800
+
+intel-level-zero-gpu-raytracing (1.0.0-0ubuntu1~24.10~ppa4) oracular; urgency=medium
 
   * Remove pkg compression override and drop 3rd party docs
 
