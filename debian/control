@@ -17,7 +17,7 @@ Standards-Version: 4.3.0
 Homepage: https://github.com/intel/level-zero-raytracing-support
 
 Package: libze-intel-gpu-raytracing
-Replaces: intel-level-zero-gpu-raytracing (>= 1.0.0-0ubuntu1~24.10~ppa4)
+Replaces: intel-level-zero-gpu-raytracing
 Conflicts: intel-level-zero-gpu-raytracing
 Architecture: amd64
 Depends:
