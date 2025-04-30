@@ -1,3 +1,9 @@
+intel-level-zero-gpu-raytracing (1.1.0-0ubuntu1~24.10~ppa1) oracular; urgency=medium
+
+  * Update to version 1.1.0
+
+ -- Pavel Androniychuk <pavel.androniychuk@intel.com>  Wed, 30 Apr 2025 10:31:46 -0700
+
 intel-level-zero-gpu-raytracing (1.0.0-0ubuntu1~24.10~ppa5) oracular; urgency=medium
 
   * Change package name to fit soname
