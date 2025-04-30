@@ -5,6 +5,7 @@ intel-level-zero-gpu-raytracing (1.1.0-0ubuntu1~24.10~ppa1) oracular; urgency=me
 
   [ Shane McKee ]
   * Change to oracular for Intel Graphics PPA 
+  * Blended in changes from Pavel's PR#7 during conflict resolution
 
  -- Shane McKee <shane.mckee@canonical.com>  Fri, 02 May 2025 20:12:54 +0400
 

@@ -22,10 +22,9 @@ Architecture: amd64
 Depends:
  ${misc:Depends},
  ${shlibs:Depends},
- level-zero (>=1.17.44) | libze1 (>=1.17.44)
-Description: oneAPI Level Zero Ray Tracing Support
- .
- The oneAPI Level Zero Ray Tracing Support library implements high performance CPU
+ libze1 (>=1.21.1)
+Description: Level Zero Ray Tracing Support library
+ The Level Zero Ray Tracing Support library implements high performance CPU
  based construction algorithms for 3D acceleration structures that are
  compatible with the ray tracing hardware of Intel GPUs.
  This library is used by Intel(R) oneAPI Level Zero to implement part of the
