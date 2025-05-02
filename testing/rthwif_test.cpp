@@ -7,7 +7,7 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wignored-attributes"
 
-#include <CL/sycl.hpp>
+#include <sycl/sycl.hpp>
 #include "tbb/tbb.h"
 
 #if defined(ZE_RAYTRACING)
@@ -228,6 +228,16 @@ void compareTestOutput(uint32_t tid, uint32_t& errors, const TestOutput& test, c
       errors++;                                                         \
     }                                                                   \
   }
+#define COMPARE3F(member,eps) {                                          \
+    const bool x = fabs(test.member.x-expected.member.x) > eps;     \
+    const bool y = fabs(test.member.y-expected.member.y) > eps;     \
+    const bool z = fabs(test.member.z-expected.member.z) > eps;     \
+    if (x || y || z) {                                                  \
+      if (errors < 16)                                                  \
+        std::cout << "test" << tid << " " #member " mismatch: output " << test.member << " != expected " << expected.member << std::endl; \
+      errors++;                                                         \
+    }                                                                   \
+  }
 #define COMPARE3I(member,eps) {                                          \
     const bool x = test.member.x != expected.member.x;     \
     const bool y = test.member.y != expected.member.y;     \
@@ -265,10 +275,10 @@ void compareTestOutput(uint32_t tid, uint32_t& errors, const TestOutput& test, c
   COMPARE3(v0,eps);
   COMPARE3(v1,eps);
   COMPARE3(v2,eps);
-  COMPARE3I(world_to_object.vx,eps);
-  COMPARE3I(world_to_object.vy,eps);
-  COMPARE3I(world_to_object.vz,eps);
-  COMPARE3I(world_to_object.p ,eps);
+  COMPARE3F(world_to_object.vx,eps);
+  COMPARE3F(world_to_object.vy,eps);
+  COMPARE3F(world_to_object.vz,eps);
+  COMPARE3F(world_to_object.p ,eps);
   COMPARE3I(object_to_world.vx,eps);
   COMPARE3I(object_to_world.vy,eps);
   COMPARE3I(object_to_world.vz,eps);
@@ -425,7 +435,7 @@ const Bounds3f xfmBounds(const Transform& m, const Bounds3f& b)
 struct Triangle
 {
   Triangle()
-    : v0(0,0,0), v1(0,0,0), v2(0,0,0), index(0) {}
+    : v0(0.f,0.f,0.f), v1(0.f,0.f,0.f), v2(0.f,0.f,0.f), index(0) {}
   
   Triangle (sycl::float3 v0, sycl::float3 v1, sycl::float3 v2, uint32_t index)
     : v0(v0), v1(v1), v2(v2), index(index) {}
@@ -1400,8 +1410,8 @@ void render(uint32_t i, const TestInput& in, TestOutput& out, intel_raytracing_a
   out.ray0_flags = intel_get_ray_flags(query,0);
   
   /* clear ray data of level N */
-  out.rayN_org = sycl::float3(0,0,0);
-  out.rayN_dir = sycl::float3(0,0,0);
+  out.rayN_org = sycl::float3(0.f,0.f,0.f);
+  out.rayN_dir = sycl::float3(0.f,0.f,0.f);
   out.rayN_tnear = 0.0f;
   out.rayN_mask = 0;
   out.rayN_flags = 0;
@@ -1503,8 +1513,8 @@ void render_loop(uint32_t i, const TestInput& in, TestOutput& out, size_t scene_
   out.ray0_flags = intel_get_ray_flags(query,0);
   
   /* clear ray data of level N */
-  out.rayN_org = sycl::float3(0,0,0);
-  out.rayN_dir = sycl::float3(0,0,0);
+  out.rayN_org = sycl::float3(0.f,0.f,0.f);
+  out.rayN_dir = sycl::float3(0.f,0.f,0.f);
   out.rayN_tnear = 0.0f;
   out.rayN_mask = 0;
   out.rayN_flags = 0;
@@ -1669,9 +1679,9 @@ void render_loop(uint32_t i, const TestInput& in, TestOutput& out, size_t scene_
     out.geomID = intel_get_hit_geometry_id( query, intel_hit_type_committed_hit );
     out.primID = intel_get_hit_primitive_id( query, intel_hit_type_committed_hit );
 
-    out.v0 = sycl::float3(0,0,0);
-    out.v1 = sycl::float3(0,0,0);
-    out.v2 = sycl::float3(0,0,0);
+    out.v0 = sycl::float3(0.f,0.f,0.f);
+    out.v1 = sycl::float3(0.f,0.f,0.f);
+    out.v2 = sycl::float3(0.f,0.f,0.f);
     if (intel_get_hit_candidate( query, intel_hit_type_committed_hit ) == intel_candidate_type_triangle)
     {
       intel_float3 vertex_out[3];
@@ -1728,8 +1738,8 @@ void buildTestExpectedInputAndOutput(std::shared_ptr<Scene> scene, size_t numTes
         const sycl::float3 p = tri.sample(0.1f,0.6f);
         const Transform world_to_local = rcp(hit.local_to_world);
         
-        in[tid].org = p + sycl::float3(0,0,-1);
-        in[tid].dir = sycl::float3(0,0,1);
+        in[tid].org = p + sycl::float3(0.f,0.f,-1.f);
+        in[tid].dir = sycl::float3(0.f,0.f,1.f);
         in[tid].tnear = 0.0f;
         in[tid].tfar = 10000.0f;
         in[tid].mask = 0xFF;
@@ -1790,9 +1800,9 @@ void buildTestExpectedInputAndOutput(std::shared_ptr<Scene> scene, size_t numTes
           }
            
           if (hit.procedural_triangle) {
-            out_expected[tid].v0 = sycl::float3(0,0,0);
-            out_expected[tid].v1 = sycl::float3(0,0,0);
-            out_expected[tid].v2 = sycl::float3(0,0,0);
+            out_expected[tid].v0 = sycl::float3(0.f,0.f,0.f);
+            out_expected[tid].v1 = sycl::float3(0.f,0.f,0.f);
+            out_expected[tid].v2 = sycl::float3(0.f,0.f,0.f);
           } else {
             out_expected[tid].v0 = hit.triangle.v0;
             out_expected[tid].v1 = hit.triangle.v1;
@@ -1977,6 +1987,7 @@ uint32_t executeBuildTest(sycl::device& device, sycl::queue& queue, sycl::contex
 {
   uint32_t numErrors = 0;
   for (uint32_t i=0; i<128; i++) {
+
     const uint32_t numPrimitives = i>10 ? i*i : i;
     std::cout << "testing " << numPrimitives << " primitives" << std::endl;
     numErrors += executeBuildTest(device,queue,context,test,buildMode,numPrimitives,i);
@@ -2050,18 +2061,18 @@ void* allocDispatchGlobals(sycl::device device, sycl::context context)
   return dispatchGlobalsPtr;
 }
 
-int main(int argc, char* argv[])
+int main(int argc, char* argv[]) try
 {
   TestType test = TestType::TRIANGLES_COMMITTED_HIT;
   InstancingType inst = InstancingType::NONE;
   BuildMode buildMode = BuildMode::BUILD_EXPECTED_SIZE;
 
 #if defined(EMBREE_SYCL_L0_RTAS_BUILDER)
-  ZeWrapper::RTAS_BUILD_MODE rtas_build_mode = ZeWrapper::RTAS_BUILD_MODE::AUTO;
+  ZeWrapper::RTAS_BUILD_MODE rtas_build_mode = ZeWrapper::RTAS_BUILD_MODE::LEVEL_ZERO;
 #else
   ZeWrapper::RTAS_BUILD_MODE rtas_build_mode = ZeWrapper::RTAS_BUILD_MODE::INTERNAL;
 #endif
-    
+  
   bool jit_cache = false;
   uint32_t numThreads = tbb::this_task_arena::max_concurrency();
   
@@ -2158,8 +2169,13 @@ int main(int argc, char* argv[])
   RTCore::SetXeVersion((RTCore::XeVersion)ZE_RAYTRACING_DEVICE);
 #endif
 
+#if TBB_INTERFACE_VERSION >= 11005
   tbb::global_control tbb_threads(tbb::global_control::max_allowed_parallelism,numThreads);
-    
+#else
+  tbb::task_scheduler_init tbb_threads(tbb::task_scheduler_init::deferred);
+  tbb_threads.initialize(int(numThreads));
+#endif
+
   /* initialize SYCL device */
   device = sycl::device(sycl::gpu_selector_v);
   sycl::queue queue = sycl::queue(device,exception_handler);
@@ -2172,6 +2188,7 @@ int main(int argc, char* argv[])
   /* execute test */
   RandomSampler_init(rng,0x56FE238A);
 
+  ze_result_t result = ZE_RESULT_SUCCESS;
   sycl::platform platform = device.get_platform();
   ze_driver_handle_t hDriver = sycl::get_native<sycl::backend::ext_oneapi_level_zero>(platform);
 
@@ -2180,7 +2197,7 @@ int main(int argc, char* argv[])
   {
     uint32_t count = 0;
     std::vector<ze_driver_extension_properties_t> extensions;
-    ze_result_t result = ZeWrapper::zeDriverGetExtensionProperties(hDriver,&count,extensions.data());
+    result = ZeWrapper::zeDriverGetExtensionProperties(hDriver,&count,extensions.data());
     if (result != ZE_RESULT_SUCCESS)
       throw std::runtime_error("zeDriverGetExtensionProperties failed");
     
@@ -2197,29 +2214,45 @@ int main(int argc, char* argv[])
     }
 
     if (ze_rtas_builder)
-      ZeWrapper::initRTASBuilder(hDriver,ZeWrapper::RTAS_BUILD_MODE::AUTO);
+      result = ZeWrapper::initRTASBuilder(hDriver,ZeWrapper::RTAS_BUILD_MODE::AUTO);
     else
-      ZeWrapper::initRTASBuilder(hDriver,ZeWrapper::RTAS_BUILD_MODE::INTERNAL);
+      result = ZeWrapper::initRTASBuilder(hDriver,ZeWrapper::RTAS_BUILD_MODE::INTERNAL);
   }
   else
-    ZeWrapper::initRTASBuilder(hDriver,rtas_build_mode);
+    result = ZeWrapper::initRTASBuilder(hDriver,rtas_build_mode);
 
+  if (result == ZE_RESULT_ERROR_DEPENDENCY_UNAVAILABLE)
+    throw std::runtime_error("cannot load ZE_experimental_rtas_builder extension");
+  
+  if (result != ZE_RESULT_SUCCESS)
+    throw std::runtime_error("cannot initialize ZE_experimental_rtas_builder extension");
+  
   if (ZeWrapper::rtas_builder == ZeWrapper::INTERNAL)
     std::cout << "using internal RTAS builder" << std::endl;
   else
     std::cout << "using Level Zero RTAS builder" << std::endl;
 
+  /* get acceleration structure format for this device */
+  ze_device_handle_t  hDevice  = sycl::get_native<sycl::backend::ext_oneapi_level_zero>(device);
+  ze_rtas_device_exp_properties_t rtasProp = { ZE_STRUCTURE_TYPE_RTAS_DEVICE_EXP_PROPERTIES };
+  ze_device_properties_t devProp = { ZE_STRUCTURE_TYPE_DEVICE_PROPERTIES, &rtasProp };
+  ze_result_t err = ZeWrapper::zeDeviceGetProperties(hDevice, &devProp );
+  if (err != ZE_RESULT_SUCCESS)
+    throw std::runtime_error("zeDeviceGetProperties failed");
+
+  std::cout << "RTAS format = " << rtasProp.rtasFormat << std::endl;
+  std::cout << "RTAS alignment = " << rtasProp.rtasBufferAlignment << std::endl;
     
   /* create L0 builder object */
   ze_rtas_builder_exp_desc_t builderDesc = { ZE_STRUCTURE_TYPE_RTAS_BUILDER_EXP_DESC };
-  ze_result_t err = ZeWrapper::zeRTASBuilderCreateExp(hDriver, &builderDesc, &hBuilder);
+  err = ZeWrapper::zeRTASBuilderCreateExp(hDriver, &builderDesc, &hBuilder);
   if (err != ZE_RESULT_SUCCESS)
     throw std::runtime_error("ze_rtas_builder creation failed");
 
   err = ZeWrapper::zeRTASParallelOperationCreateExp(hDriver,&parallelOperation);
   if (err != ZE_RESULT_SUCCESS)
     throw std::runtime_error("parallel operation creation failed");
-  
+
   uint32_t numErrors = 0;
   if (test >= TestType::BENCHMARK_TRIANGLES)
     numErrors = executeBenchmark(device,queue,context,test);
@@ -2246,6 +2279,10 @@ int main(int argc, char* argv[])
 #endif
   
   return numErrors ? 1 : 0;
+}
+catch (std::runtime_error e) {
+  std::cerr << "std::runtime_error: " << e.what() << std::endl;
+  return 1;
 }
 
 #pragma clang diagnostic pop
