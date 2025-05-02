@@ -1,7 +1,7 @@
 // Copyright 2009-2021 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-#include <CL/sycl.hpp>
+#include <sycl/sycl.hpp>
 #include "tbb/tbb.h"
 
 #include "../rttrace/rttrace.h"
@@ -64,7 +64,7 @@ catch (std::exception const& e) {
   throw;
 }
 
-std::vector<char> readFile(const std::string& fileName) try
+std::vector<unsigned char> readFile(const std::string& fileName) try
 {
   std::fstream file;
   file.exceptions (std::fstream::failbit | std::fstream::badbit);
@@ -72,9 +72,9 @@ std::vector<char> readFile(const std::string& fileName) try
 
   file.seekg (0, std::ios::end);
   std::streampos size = file.tellg();
-  std::vector<char> data(size);
+  std::vector<unsigned char> data(size);
   file.seekg (0, std::ios::beg);
-  file.read (data.data(), size);
+  file.read ((char*)data.data(), size);
   file.close();
 
   return data;
@@ -84,11 +84,21 @@ catch (std::exception const& e) {
   throw;
 }
 
-bool compareTga(const std::string& fileNameA, const std::string& fileNameB)
+size_t compareTga(const std::string& fileNameA, const std::string& fileNameB)
 {
-  const std::vector<char> dataA = readFile(fileNameA);
-  const std::vector<char> dataB = readFile(fileNameB);
-  return dataA == dataB;
+  const std::vector<unsigned char> dataA = readFile(fileNameA);
+  const std::vector<unsigned char> dataB = readFile(fileNameB);
+  if (dataA.size() != dataB.size())
+    return false;
+
+  size_t diff = 0;
+  for (int i=0; i<dataA.size(); i++)
+  {
+    if (std::abs((int)dataA[i] - (int)dataB[i]) == 1) diff++;
+    if (std::abs((int)dataA[i] - (int)dataB[i]) == 2) diff+=4;
+    if (std::abs((int)dataA[i] - (int)dataB[i]) >= 3) diff+=100;
+  }
+  return diff;
 }
 
 /* Properly allocates an acceleration structure buffer using ze_raytracing_mem_alloc_ext_desc_t property. */
@@ -417,12 +427,12 @@ void render(unsigned int x, unsigned int y, void* bvh, unsigned int* pixels, uns
     pixels[y*width+x] = 0;
     return;
   }
-  
+
   /* fixed camera */
-  sycl::float3 vx(-1, -0, -0);
-  sycl::float3 vy(-0, -1, -0);
-  sycl::float3 vz(32, 32, 95.6379f);
-  sycl::float3 p(278, 273, -800);
+  sycl::float3 vx(-1.f, -0.f, -0.f);
+  sycl::float3 vy(-0.f, -1.f, -0.f);
+  sycl::float3 vz(32.f, 32.f, 95.6379f);
+  sycl::float3 p(278.f, 273.f, -800.f);
 
   /* compute primary ray */
   intel_ray_desc_t ray;
@@ -455,11 +465,11 @@ void render(unsigned int x, unsigned int y, void* bvh, unsigned int* pixels, uns
   pixels[y*width+x] = (b << 16) + (g << 8) + r;
 }
 
-int main(int argc, char* argv[])
+int main(int argc, char* argv[]) try
 {
   /* use can specify reference image to compare against */
 #if defined(EMBREE_SYCL_L0_RTAS_BUILDER)
-  ZeWrapper::RTAS_BUILD_MODE rtas_build_mode = ZeWrapper::RTAS_BUILD_MODE::AUTO;
+  ZeWrapper::RTAS_BUILD_MODE rtas_build_mode = ZeWrapper::RTAS_BUILD_MODE::LEVEL_ZERO;
 #else
   ZeWrapper::RTAS_BUILD_MODE rtas_build_mode = ZeWrapper::RTAS_BUILD_MODE::INTERNAL;
 #endif
@@ -505,6 +515,7 @@ int main(int argc, char* argv[])
     return 1;
   }
 
+  ze_result_t result = ZE_RESULT_SUCCESS;
   sycl::platform platform = device.get_platform();
   ze_driver_handle_t hDriver = sycl::get_native<sycl::backend::ext_oneapi_level_zero>(platform);
 
@@ -513,7 +524,7 @@ int main(int argc, char* argv[])
   {
     uint32_t count = 0;
     std::vector<ze_driver_extension_properties_t> extensions;
-    ze_result_t result = ZeWrapper::zeDriverGetExtensionProperties(hDriver,&count,extensions.data());
+    result = ZeWrapper::zeDriverGetExtensionProperties(hDriver,&count,extensions.data());
     if (result != ZE_RESULT_SUCCESS)
       throw std::runtime_error("zeDriverGetExtensionProperties failed");
     
@@ -530,17 +541,34 @@ int main(int argc, char* argv[])
     }
 
     if (ze_rtas_builder)
-      ZeWrapper::initRTASBuilder(hDriver,ZeWrapper::RTAS_BUILD_MODE::AUTO);
+      result = ZeWrapper::initRTASBuilder(hDriver,ZeWrapper::RTAS_BUILD_MODE::AUTO);
     else
-      ZeWrapper::initRTASBuilder(hDriver,ZeWrapper::RTAS_BUILD_MODE::INTERNAL);
+      result = ZeWrapper::initRTASBuilder(hDriver,ZeWrapper::RTAS_BUILD_MODE::INTERNAL);
   }
   else
-    ZeWrapper::initRTASBuilder(hDriver,rtas_build_mode);
+    result = ZeWrapper::initRTASBuilder(hDriver,rtas_build_mode);
 
+  if (result == ZE_RESULT_ERROR_DEPENDENCY_UNAVAILABLE)
+    throw std::runtime_error("cannot load ZE_experimental_rtas_builder extension");
+  
+  if (result != ZE_RESULT_SUCCESS)
+    throw std::runtime_error("cannot initialize ZE_experimental_rtas_builder extension");
+  
   if (ZeWrapper::rtas_builder == ZeWrapper::INTERNAL)
     std::cout << "using internal RTAS builder" << std::endl;
   else
     std::cout << "using Level Zero RTAS builder" << std::endl;
+
+  /* get acceleration structure format for this device */
+  ze_device_handle_t  hDevice  = sycl::get_native<sycl::backend::ext_oneapi_level_zero>(device);
+  ze_rtas_device_exp_properties_t rtasProp = { ZE_STRUCTURE_TYPE_RTAS_DEVICE_EXP_PROPERTIES };
+  ze_device_properties_t devProp = { ZE_STRUCTURE_TYPE_DEVICE_PROPERTIES, &rtasProp };
+  result = ZeWrapper::zeDeviceGetProperties(hDevice, &devProp );
+  if (result != ZE_RESULT_SUCCESS)
+    throw std::runtime_error("zeDeviceGetProperties failed");
+
+  std::cout << "RTAS format = " << rtasProp.rtasFormat << std::endl;
+  std::cout << "RTAS alignment = " << rtasProp.rtasBufferAlignment << std::endl;
 
 #if defined(ZE_RAYTRACING_RT_SIMULATION)
   RTCore::Init();
@@ -598,10 +626,16 @@ int main(int argc, char* argv[])
   if (!reference_img) return 0;
 
   /* compare to reference image */
-  const bool ok = compareTga("cornell_box.tga", reference_img);
+  const size_t err = compareTga("cornell_box.tga", "cornell_box_reference.tga");
+  std::cout << "difference to reference image is " << err << std::endl;
+  const bool ok = err < 32;
   std::cout << "cornell_box ";
   if (ok) std::cout << "[PASSED]" << std::endl;
   else    std::cout << "[FAILED]" << std::endl;
 
   return ok ? 0 : 1;
+}
+catch (std::runtime_error e) {
+  std::cerr << "std::runtime_error: " << e.what() << std::endl;
+  return 1;
 }
