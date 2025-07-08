@@ -1,3 +1,9 @@
+intel-level-zero-gpu-raytracing (1.1.0-0ubuntu1~25.04~ppa2) plucky; urgency=medium
+
+  * Build with static TBB for plucky ONLY
+
+ -- Pavel Androniychuk <pavel.androniychuk@intel.com>  Tue, 08 Jul 2025 11:20:18 -0700
+
 intel-level-zero-gpu-raytracing (1.1.0-0ubuntu1~24.10~ppa1) oracular; urgency=medium
 
   [ Sven Woop ]
